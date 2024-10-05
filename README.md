@@ -60,20 +60,20 @@ nwdiag {
 
 ## Usage
 
-:bulb: Here, we use the isprouter VM as the controller, but if you want to work from WSL in Windows, you can read [these instructions](./installation-windows-wsl.md) instead.
-
 1. Create the following host-only network in VirtualBox to simulate the the fake internet:
 
     - Name: `vboxnet1` (when different, for example on Windows: "VirtualBox Host-Only Ethernet Adapter #2", change this in the [`Vagrantfile`](./Vagrantfile))
     - IP range: 192.168.62.0/24
 
-2. `vagrant up --parallel` or go slowly (1 by 1) and do `vagrant up <vm_name>`
+2. Make sure your vagrant boxes are up to date: `vagrant box update`
 
-3. Disable all the NAT connections added by vagrant: `python ./disable-nat.py`
+3. `vagrant up --parallel` or go slowly (1 by 1) and do `vagrant up <vm_name>`
+
+4. Disable all the NAT connections added by vagrant: `python ./disable-nat.py`
 
     :warning: `vagrant ssh` won't work anymore and that is **by design**! This command is also not available in a real network, so learn to use SSH properly: login into the required hosts using SSH with IP addresses and jump/forward options!
 
-4. SSH into the isprouter VM:
+5. SSH into the isprouter VM:
 
     ```bash
     ssh vagrant@192.168.62.254
@@ -86,11 +86,12 @@ nwdiag {
     - username: `vagrant`
     - password: `vagrant`
 
-5. Execute the following commands. This can take a while!
+6. Execute the following commands. This can take a while!
 
     ```bash
     isprouter:~$ cd ansible/
     isprouter:~/ansible$ find . -type f -not -path "./files/web/app.jar" -print0 | xargs -0 dos2unix
+    isprouter:~/ansible$ chmod u+x run-on-isprouter.sh
     isprouter:~/ansible$ sudo ./run-on-isprouter.sh
     ...
 
@@ -99,3 +100,5 @@ nwdiag {
     ```
 
     :bulb: We have added `dos2unix` here for Windows users, but why do they need this? Tip: Linux users don't need this. Tip2: `\r\n` vs. `\n`.
+
+:bulb: The new version of VirtualBox is currently not compatible with vagrant. or you stay on 7.0, or you can use [libvirt](https://vagrant-libvirt.github.io/vagrant-libvirt/) (tip provided by [@CharanChander](https://github.com/CharanChander))

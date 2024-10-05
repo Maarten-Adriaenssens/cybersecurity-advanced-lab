@@ -3,7 +3,7 @@
   become: yes
   tasks:
     - name: Install apache/httpd
-      ansible.builtin.package:
+      ansible.builtin.dnf:
         name:
           - httpd
           - java-17-openjdk
@@ -11,97 +11,99 @@
           - python3-pip
           - python3-libsemanage
         state: present
- 
+
     - name: Enable and start apache/httpd
       ansible.builtin.service:
         name: httpd
         enabled: yes
         state: restarted
- 
+
     - name: Copy apache configuration
       ansible.builtin.copy:
         src: ./files/web/etc/httpd.conf
         dest: /etc/httpd/conf/httpd.conf
- 
+
     - name: Copy systemd insecurewebapp configuration
       ansible.builtin.copy:
         src: ./files/web/insecurewebapp.service
         dest: /etc/systemd/system/insecurewebapp.service
- 
+
     - name: Copy systemd flaskapp configuration
       ansible.builtin.copy:
         src: ./files/web/flaskapp.service
         dest: /etc/systemd/system/flaskapp.service
- 
+
     - name: Selinux:setsebool -P httpd_can_network_connect on
       ansible.builtin.seboolean:
         name: httpd_can_network_connect
         state: yes
         persistent: yes
- 
+
     - name: Create insecurewebapp dir in opt
       ansible.builtin.file:
         path: /opt/insecurewebapp/
         state: directory
         mode: "0755"
- 
+
     - name: Copy app.jar
       ansible.builtin.copy:
         src: ./files/web/app.jar
         dest: /opt/insecurewebapp/app.jar
- 
+
     - name: Install packages with pip
       ansible.builtin.pip:
         name:
           - flask
           - mysql-connector-python
         state: present
- 
+
     - name: Create flask dir in opt
       ansible.builtin.file:
         path: /opt/flask/
         state: directory
         mode: "0755"
- 
+
     - name: Create flask dir templates in opt
       ansible.builtin.file:
         path: /opt/flask/templates
         state: directory
         mode: "0755"
- 
+
     - name: Copy flask app - app.py
       ansible.builtin.copy:
         src: ./files/web/flask/app.py
         dest: /opt/flask/app.py
- 
+
     - name: Copy flask app - index.html
       ansible.builtin.copy:
         src: ./files/web/flask/templates/index.html
         dest: /opt/flask/templates/index.html
- 
+
     - name: Copy main site - index.html
       ansible.builtin.copy:
         src: ./files/web/index.html
         dest: /var/www/html/index.html
- 
+
     - name: Perform the systemd daemon-reload and start and enable insecurewebapp service
       ansible.builtin.systemd:
         name: insecurewebapp.service
+        enabled: yes
         state: restarted
         daemon_reload: true
- 
+
     - name: Perform the systemd daemon-reload and start and enable flaskapp service
       ansible.builtin.systemd:
         name: flaskapp.service
+        enabled: yes
         state: restarted
         daemon_reload: true
- 
+
     - name: Add FQDN
       ansible.builtin.lineinfile:
         path: /etc/hosts
         line: "127.0.2.1 web web.cybersec.internal www www.cybersec.internal"
         state: present
- 
+
     - name: Enable and start apache/httpd
       ansible.builtin.service:
         name: httpd
