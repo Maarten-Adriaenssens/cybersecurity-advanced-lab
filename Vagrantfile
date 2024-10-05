@@ -11,6 +11,7 @@ Vagrant.configure("2") do |config|
         host.vm.network "private_network", ip: "172.30.255.254", netmask: "255.255.0.0", virtualbox__intnet: "internal-company-lan"
 
         host.vm.provider :virtualbox do |v|
+            v.customize ["modifyvm", :id, "--groups", "/CSA"]
             v.name = "companyrouter"
             v.cpus = "1"
             v.memory = "1024"
@@ -30,6 +31,7 @@ Vagrant.configure("2") do |config|
         host.vm.network "private_network", ip: "172.30.0.4", netmask: "255.255.255.0", virtualbox__intnet: "internal-company-lan"
 
         host.vm.provider :virtualbox do |v|
+            v.customize ["modifyvm", :id, "--groups", "/CSA"]
             v.name = "dns"
             v.cpus = "1"
             v.memory = "256"
@@ -52,6 +54,7 @@ Vagrant.configure("2") do |config|
         host.vm.network "private_network", ip: "172.30.0.10", netmask: "255.255.255.0", virtualbox__intnet: "internal-company-lan"
 
         host.vm.provider :virtualbox do |v|
+            v.customize ["modifyvm", :id, "--groups", "/CSA"]
             v.name = "web"
             v.cpus = "1"
             v.memory = "1024"
@@ -71,6 +74,7 @@ Vagrant.configure("2") do |config|
         host.vm.network "private_network", ip: "172.30.0.15", netmask: "255.255.255.0", virtualbox__intnet: "internal-company-lan"
 
         host.vm.provider :virtualbox do |v|
+            v.customize ["modifyvm", :id, "--groups", "/CSA"]
             v.name = "database"
             v.cpus = "1"
             v.memory = "256"
@@ -94,6 +98,7 @@ Vagrant.configure("2") do |config|
         host.vm.network "private_network", ip: "172.30.0.123", netmask: "255.255.255.0", virtualbox__intnet: "internal-company-lan"
 
         host.vm.provider :virtualbox do |v|
+            v.customize ["modifyvm", :id, "--groups", "/CSA"]
             v.name = "employee"
             v.cpus = "1"
             v.memory = "256"
@@ -116,6 +121,7 @@ Vagrant.configure("2") do |config|
         host.vm.network "private_network", ip: "192.168.62.254", netmask: "255.255.255.0", name: HOST_ONLY_NETWORK
 
         host.vm.provider :virtualbox do |v|
+            v.customize ["modifyvm", :id, "--groups", "/CSA"]
             v.name = "isprouter"
             v.cpus = "1"
             v.memory = "256"
@@ -135,6 +141,7 @@ Vagrant.configure("2") do |config|
         host.vm.network "private_network", ip: "172.10.10.254", netmask: "255.255.255.0", virtualbox__intnet: "employee-home-lan"
 
         host.vm.provider :virtualbox do |v|
+            v.customize ["modifyvm", :id, "--groups", "/CSA"]
             v.name = "homerouter"
             v.cpus = "1"
             v.memory = "1024"
@@ -154,6 +161,7 @@ Vagrant.configure("2") do |config|
         host.vm.network "private_network", ip: "172.10.10.123", netmask: "255.255.255.0", virtualbox__intnet: "employee-home-lan"
 
         host.vm.provider :virtualbox do |v|
+            v.customize ["modifyvm", :id, "--groups", "/CSA"]
             v.name = "remote-employee"
             v.cpus = "1"
             v.memory = "1024"
