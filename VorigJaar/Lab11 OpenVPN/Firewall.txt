@@ -1,0 +1,366 @@
+[cyb@companyrouter ~]$ sudo firewall-cmd --get-active-zones
+internal
+  interfaces: tun0
+public
+  interfaces: eth0 eth1 eth2 eth3
+[cyb@companyrouter ~]$ sudo firewall-cmd --zone=public --list-all
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: eth0 eth1 eth2 eth3
+  sources:
+  services: cockpit dhcpv6-client ssh
+  ports: 80/tcp 3306/tcp 2222/tcp 1194/udp
+  protocols:
+  forward: yes
+  masquerade: yes
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+[cyb@companyrouter ~]$ sudo firewall-cmd --zone=internal --list-all
+internal (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: tun0
+  sources:
+  services: cockpit dhcpv6-client mdns samba-client ssh
+  ports:
+  protocols:
+  forward: yes
+  masquerade: yes
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+        rule family="ipv4" source address="10.8.0.0/24" accept
+        rule family="ipv4" source address="192.168.100.0/24" destination address="172.30.0.0/16" drop
+[cyb@companyrouter ~]$ sudo firewall-cmd --zone=public --list-rich-rules
+
+[cyb@companyrouter ~]$ sudo firewall-cmd --zone=internal --list-rich-rules
+rule family="ipv4" source address="10.8.0.0/24" accept
+rule family="ipv4" source address="192.168.100.0/24" destination address="172.30.0.0/16" drop
+[cyb@companyrouter ~]$ sudo firewall-cmd --list-all --zone=public | grep masquerade
+  masquerade: yes
+[cyb@companyrouter ~]$ sudo firewall-cmd --list-all --zone=internal | grep masquerade
+  masquerade: yes
+[cyb@companyrouter ~]$ sudo firewall-cmd --zone=public --list-ports
+sudo firewall-cmd --zone=public --list-services
+80/tcp 2222/tcp 3306/tcp 1194/udp
+cockpit dhcpv6-client ssh
+[cyb@companyrouter ~]$ sudo firewall-cmd --zone=internal --list-ports
+sudo firewall-cmd --zone=internal --list-services
+
+cockpit dhcpv6-client mdns samba-client ssh
+[cyb@companyrouter ~]$ sudo sysctl net.ipv4.ip_forward
+net.ipv4.ip_forward = 1
+[cyb@companyrouter ~]$ sudo iptables -L -v -n
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain FORWARD (policy ACCEPT 4424 packets, 25M bytes)
+ pkts bytes target     prot opt in     out     source               destination
+   33  2772 ACCEPT     0    --  tun0   eth1    10.8.0.0/24          172.30.0.0/16
+  147  9636 DROP       0    --  eth0   eth1    192.168.100.0/24     172.30.0.0/16
+    0     0 ACCEPT     0    --  tun0   eth1    10.8.0.0/24          172.30.0.0/16
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+[cyb@companyrouter ~]$ sudo iptables -t nat -L -v -n
+Chain PREROUTING (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain POSTROUTING (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+[cyb@companyrouter ~]$
+
+
+
+
+
+
+red@machine:~$ sudo tshark -i enp0s3 -f "host 192.168.100.104"
+Running as user "root" and group "root". This could be dangerous.
+Capturing on 'enp0s3'
+ ** (tshark:3146) 15:25:15.578236 [Main MESSAGE] -- Capture started.
+ ** (tshark:3146) 15:25:15.578932 [Main MESSAGE] -- File: "/tmp/wireshark_enp0s3XF54S2.pcapng"
+    1 0.000000000 PcsCompu_08:a7:b0 → PcsCompu_30:39:43 ARP 42 Who has 192.168.100.104? Tell 192.168.100.102
+    2 0.000551495 PcsCompu_30:39:43 → PcsCompu_08:a7:b0 ARP 60 192.168.100.104 is at 08:00:27:30:39:43
+    3 1.380675186 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x318f, seq=0/0, ttl=64
+    4 1.380696716 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x318f, seq=0/0, ttl=63
+    5 1.381648701 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x318f, seq=0/0, ttl=63 (request in 4)
+    6 1.381664529 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x318f, seq=0/0, ttl=62
+    7 1.388125665 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x318f, seq=0/0, ttl=64
+    8 1.388224678 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x318f, seq=0/0, ttl=63 (request in 7)
+    9 1.389196009 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x318f, seq=0/0, ttl=63
+   10 1.389213798 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x318f, seq=0/0, ttl=62
+   11 1.396142849 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x318f, seq=0/0, ttl=63
+   12 4.874238677 192.168.100.253 → 192.168.100.104 OpenVPN 82 MessageType: P_DATA_V2
+   13 4.874258991 192.168.100.253 → 192.168.100.104 OpenVPN 82 MessageType: P_DATA_V2
+   14 4.875012155 192.168.100.104 → 192.168.100.253 ICMP 110 Destination unreachable (Port unreachable)
+   15 4.875033180 192.168.100.104 → 192.168.100.253 ICMP 110 Destination unreachable (Port unreachable)
+   16 4.876040588 192.168.100.253 → 192.168.100.104 OpenVPN 82 MessageType: P_DATA_V2
+   17 4.876307092 192.168.100.104 → 192.168.100.253 ICMP 110 Destination unreachable (Port unreachable)
+   18 4.876457151 192.168.100.104 → 192.168.100.253 ICMP 110 Destination unreachable (Port unreachable)
+   19 4.876467505 192.168.100.104 → 192.168.100.253 ICMP 110 Destination unreachable (Port unreachable)
+   20 4.884122258 192.168.100.104 → 192.168.100.253 ICMP 110 Destination unreachable (Port unreachable)
+   21 5.804298748 PcsCompu_08:a7:b0 → PcsCompu_30:39:43 ARP 42 192.168.100.253 is at 08:00:27:08:a7:b0
+   22 5.804364542 PcsCompu_08:a7:b0 → PcsCompu_68:98:b2 ARP 42 192.168.100.104 is at 08:00:27:08:a7:b0 (duplicate use of 192.168.100.253 detected!)
+   23 7.820567255 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=0/0, ttl=64
+   24 7.820590856 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=0/0, ttl=63
+   25 7.821525124 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=0/0, ttl=63 (request in 24)
+   26 7.821537270 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=0/0, ttl=62
+   27 7.828127941 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=0/0, ttl=64
+   28 7.828340586 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=0/0, ttl=63 (request in 27)
+   29 7.828891067 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=0/0, ttl=63
+   30 7.828902028 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=0/0, ttl=62
+   31 7.829416548 192.168.100.104 → 172.30.0.4   DNS 99 Standard query 0x7653 PTR 254.100.168.192.in-addr.arpa OPT
+   32 7.829425576 192.168.100.104 → 172.30.0.4   DNS 99 Standard query 0x7653 PTR 254.100.168.192.in-addr.arpa OPT
+   33 7.836176112 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=0/0, ttl=63
+   34 7.836456389 192.168.100.104 → 172.30.0.4   DNS 99 Standard query 0x7653 PTR 254.100.168.192.in-addr.arpa OPT
+   35 7.839521924   172.30.0.4 → 192.168.100.104 DNS 159 Standard query response 0x7653 No such name PTR 254.100.168.192.in-addr.arpa SOA ns1.hogent.be OPT
+   36 7.839537172   172.30.0.4 → 192.168.100.104 DNS 159 Standard query response 0x7653 No such name PTR 254.100.168.192.in-addr.arpa SOA ns1.hogent.be OPT
+   37 7.840066892 192.168.100.104 → 172.30.0.4   DNS 88 Standard query 0x7653 PTR 254.100.168.192.in-addr.arpa
+   38 7.840078835 192.168.100.104 → 172.30.0.4   DNS 88 Standard query 0x7653 PTR 254.100.168.192.in-addr.arpa
+   39 7.841270867   172.30.0.4 → 192.168.100.104 DNS 148 Standard query response 0x7653 No such name PTR 254.100.168.192.in-addr.arpa SOA ns1.hogent.be
+   40 7.841290293   172.30.0.4 → 192.168.100.104 DNS 148 Standard query response 0x7653 No such name PTR 254.100.168.192.in-addr.arpa SOA ns1.hogent.be
+   41 7.844162530   172.30.0.4 → 192.168.100.104 DNS 159 Standard query response 0x7653 No such name PTR 254.100.168.192.in-addr.arpa SOA ns1.hogent.be OPT
+   42 7.844358106 192.168.100.104 → 172.30.0.4   DNS 88 Standard query 0x7653 PTR 254.100.168.192.in-addr.arpa
+   43 7.844510644 192.168.100.104 → 172.30.0.4   ICMP 187 Destination unreachable (Port unreachable)
+   44 7.844520571 192.168.100.104 → 172.30.0.4   ICMP 187 Destination unreachable (Port unreachable)
+   45 7.844670422   172.30.0.4 → 192.168.100.104 DNS 148 Standard query response 0x7653 No such name PTR 254.100.168.192.in-addr.arpa SOA ns1.hogent.be
+   46 7.844881126 192.168.100.104 → 172.30.0.4   ICMP 176 Destination unreachable (Port unreachable)
+   47 7.844889675 192.168.100.104 → 172.30.0.4   ICMP 176 Destination unreachable (Port unreachable)
+   48 7.845288575   172.30.0.4 → 192.168.100.104 DNS 148 Standard query response 0x7653 No such name PTR 254.100.168.192.in-addr.arpa SOA ns1.hogent.be
+   49 7.845295796   172.30.0.4 → 192.168.100.104 DNS 148 Standard query response 0x7653 No such name PTR 254.100.168.192.in-addr.arpa SOA ns1.hogent.be
+   50 7.845480654 192.168.100.104 → 172.30.0.4   ICMP 176 Destination unreachable (Port unreachable)
+   51 7.845487735 192.168.100.104 → 172.30.0.4   ICMP 176 Destination unreachable (Port unreachable)
+   52 7.852116214 192.168.100.104 → 172.30.0.4   ICMP 187 Destination unreachable (Port unreachable)
+   53 7.852441187 192.168.100.104 → 172.30.0.4   ICMP 176 Destination unreachable (Port unreachable)
+   54 7.852651078   172.30.0.4 → 192.168.100.104 DNS 148 Standard query response 0x7653 No such name PTR 254.100.168.192.in-addr.arpa SOA ns1.hogent.be
+   55 7.852802073 192.168.100.104 → 172.30.0.4   ICMP 176 Destination unreachable (Port unreachable)
+   56 7.852923588 192.168.100.104 → 172.30.0.4   ICMP 176 Destination unreachable (Port unreachable)
+   57 7.852933573 192.168.100.104 → 172.30.0.4   ICMP 176 Destination unreachable (Port unreachable)
+   58 7.860245327 192.168.100.104 → 172.30.0.4   ICMP 176 Destination unreachable (Port unreachable)
+   59 8.821624581 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=1/256, ttl=64
+   60 8.821654796 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=1/256, ttl=63
+   61 8.823071510 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=1/256, ttl=63 (request in 60)
+   62 8.823085160 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=1/256, ttl=62
+   63 8.828106383 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=1/256, ttl=64
+   64 8.828333897 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=1/256, ttl=63 (request in 63)
+   65 8.829162450 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=1/256, ttl=63
+   66 8.829176887 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=1/256, ttl=62
+   67 8.836163506 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=1/256, ttl=63
+   68 9.823045771 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=2/512, ttl=64
+   69 9.823087643 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=2/512, ttl=63
+   70 9.824728234 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=2/512, ttl=63 (request in 69)
+   71 9.824756979 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=2/512, ttl=62
+   72 9.828183772 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=2/512, ttl=64
+   73 9.828484030 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=2/512, ttl=63 (request in 72)
+   74 9.829588716 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=2/512, ttl=63
+   75 9.829615995 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=2/512, ttl=62
+   76 9.836203708 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=2/512, ttl=63
+   77 10.823414052 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=3/768, ttl=64
+   78 10.823441400 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=3/768, ttl=63
+   79 10.824681704 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=3/768, ttl=63 (request in 78)
+   80 10.824698479 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=3/768, ttl=62
+   81 10.828115901 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=3/768, ttl=64
+   82 10.828353228 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=3/768, ttl=63 (request in 81)
+   83 10.829199295 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=3/768, ttl=63
+   84 10.829219090 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=3/768, ttl=62
+   85 10.836188422 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=3/768, ttl=63
+   86 11.823860654 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=4/1024, ttl=64
+   87 11.823895020 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=4/1024, ttl=63
+   88 11.825406129 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=4/1024, ttl=63 (request in 87)
+   89 11.825422695 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=4/1024, ttl=62
+   90 11.828129469 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=4/1024, ttl=64
+   91 11.828247081 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=4/1024, ttl=63 (request in 90)
+   92 11.829464600 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=4/1024, ttl=63
+   93 11.829485181 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=4/1024, ttl=62
+   94 11.836242118 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=4/1024, ttl=63
+   95 12.825235250 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=5/1280, ttl=64
+   96 12.825257864 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=5/1280, ttl=63
+   97 12.826444087 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=5/1280, ttl=63 (request in 96)
+   98 12.826460876 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=5/1280, ttl=62
+   99 12.828088359 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=5/1280, ttl=64
+  100 12.828301427 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=5/1280, ttl=63 (request in 99)
+  101 12.829051878 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=5/1280, ttl=63
+  102 12.829065634 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=5/1280, ttl=62
+  103 12.836186938 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=5/1280, ttl=63
+  104 13.826837169 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=6/1536, ttl=64
+  105 13.826864247 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=6/1536, ttl=63
+  106 13.828093244 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=6/1536, ttl=64
+  107 13.828250183 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=6/1536, ttl=63 (request in 106)
+  108 13.828265591 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=6/1536, ttl=62
+  109 13.829143371 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=6/1536, ttl=63
+  110 13.829159459 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=6/1536, ttl=62
+  111 13.836187162 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=6/1536, ttl=63
+  112 13.836462585 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=6/1536, ttl=63
+  113 14.828035652 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=7/1792, ttl=64
+  114 14.828061555 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=7/1792, ttl=63
+  115 14.828315091 192.168.100.104 → 172.30.20.10 ICMP 98 Echo (ping) request  id=0x3191, seq=7/1792, ttl=64
+  116 14.829037075 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=7/1792, ttl=63 (request in 115)
+  117 14.829056536 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=7/1792, ttl=62
+  118 14.829309957 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=7/1792, ttl=63
+  119 14.829321989 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=7/1792, ttl=62
+  120 14.836137548 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=7/1792, ttl=63
+  121 14.836311520 172.30.20.10 → 192.168.100.104 ICMP 98 Echo (ping) reply    id=0x3191, seq=7/1792, ttl=63
+  122 14.837835786 192.168.100.104 → 192.168.100.253 OpenVPN 60 MessageType: P_CONTROL_HARD_RESET_CLIENT_V2
+  123 14.837856227 192.168.100.104 → 192.168.100.253 OpenVPN 56 MessageType: P_CONTROL_HARD_RESET_CLIENT_V2
+  124 14.838392624 192.168.100.253 → 192.168.100.104 OpenVPN 68 MessageType: P_CONTROL_HARD_RESET_SERVER_V2
+  125 14.838402795 192.168.100.253 → 192.168.100.104 OpenVPN 68 MessageType: P_CONTROL_HARD_RESET_SERVER_V2
+  126 14.839389281 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  127 14.839408883 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  128 14.839874446 192.168.100.104 → 192.168.100.253 TLSv1 337 Client Hello
+  129 14.839884990 192.168.100.104 → 192.168.100.253 TLSv1 337 Client Hello
+  130 14.843022119 192.168.100.253 → 192.168.100.104 TLSv1.3 1242 Server Hello, Change Cipher Spec, Application Data, Application Data
+  131 14.843048157 192.168.100.253 → 192.168.100.104 TLSv1.3 1242 Server Hello, Change Cipher Spec, Application Data, Application Data
+  132 14.843192592 192.168.100.253 → 192.168.100.104 TLSv1.3 1211 Continuation Data
+  133 14.843204034 192.168.100.253 → 192.168.100.104 TLSv1.3 1211 Continuation Data
+  134 14.843864265 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  135 14.843872361 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  136 14.844283902 192.168.100.104 → 192.168.100.253 OpenVPN 56 MessageType: P_CONTROL_HARD_RESET_CLIENT_V2
+  137 14.844437569 192.168.100.253 → 192.168.100.104 OpenVPN 68 MessageType: P_CONTROL_HARD_RESET_SERVER_V2
+  138 14.844579952 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  139 14.844587163 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  140 14.844614024 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  141 14.844763446 192.168.100.104 → 192.168.100.253 TLSv1.3 337 Client Hello
+  142 14.844828227 192.168.100.253 → 192.168.100.104 TLSv1.3 1242 Server Hello, Change Cipher Spec, Application Data, Application Data
+  143 14.844917430 192.168.100.253 → 192.168.100.104 TLSv1.3 1211 Continuation Data
+  144 14.845021250 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  145 14.845028720 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  146 14.845061421 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  147 14.850732339 192.168.100.104 → 192.168.100.253 TLSv1.3 1242 Change Cipher Spec
+  148 14.850745923 192.168.100.104 → 192.168.100.253 TLSv1.3 1242 Change Cipher Spec
+  149 14.850732573 192.168.100.104 → 192.168.100.253 TLSv1.3 1230 Continuation Data
+  150 14.850761046 192.168.100.104 → 192.168.100.253 TLSv1.3 1230 Continuation Data
+  151 14.850883892 192.168.100.104 → 192.168.100.253 TLSv1.3 225 Continuation Data
+  152 14.850890134 192.168.100.104 → 192.168.100.253 TLSv1.3 225 Continuation Data
+  153 14.850884001 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  154 14.850901527 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  155 14.850884051 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  156 14.850912004 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  157 14.850991870 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  158 14.850997354 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  159 14.851167149 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  160 14.851173349 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  161 14.852156500 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  162 14.852494130 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  163 14.852709873 192.168.100.104 → 192.168.100.253 TLSv1.3 1242 Change Cipher Spec
+  164 14.852841184 192.168.100.253 → 192.168.100.104 TLSv1.3 226 Application Data, Application Data
+  165 14.852855356 192.168.100.253 → 192.168.100.104 TLSv1.3 226 Application Data, Application Data
+  166 14.852917717 192.168.100.104 → 192.168.100.253 TLSv1.3 1230 Continuation Data
+  167 14.853065441 192.168.100.104 → 192.168.100.253 TLSv1.3 225 Continuation Data
+  168 14.853285663 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  169 14.853296434 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  170 14.853413504 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  171 14.853586219 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  172 14.853755390 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  173 14.853928721 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  174 14.854477615 192.168.100.253 → 192.168.100.104 TLSv1.3 287 Application Data
+  175 14.854488335 192.168.100.253 → 192.168.100.104 TLSv1.3 287 Application Data
+  176 14.854590552 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  177 14.854599554 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  178 14.854705682 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  179 14.854714067 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  180 14.854822471 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  181 14.854830678 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  182 14.854898543 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  183 14.854904194 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  184 14.856299194 192.168.100.253 → 192.168.100.104 TLSv1.3 243 Application Data
+  185 14.856311713 192.168.100.253 → 192.168.100.104 TLSv1.3 243 Application Data
+  186 14.860117157 192.168.100.253 → 192.168.100.104 TLSv1.3 226 Application Data, Application Data
+  187 14.860305923 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  188 14.860701082 192.168.100.253 → 192.168.100.104 TLSv1.3 287 Application Data
+  189 14.860883711 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  190 14.861061552 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  191 14.861236749 192.168.100.253 → 192.168.100.104 OpenVPN 64 MessageType: P_ACK_V1
+  192 14.861411563 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  193 14.861608299 192.168.100.253 → 192.168.100.104 TLSv1.3 243 Application Data
+  194 14.883787095 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  195 14.883808149 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  196 14.883905136 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  197 14.883916228 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  198 14.883905317 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  199 14.883931768 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  200 14.884044221 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  201 14.884052276 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  202 14.884144223 192.168.100.104 → 192.168.100.253 OpenVPN 114 MessageType: P_DATA_V2
+  203 14.884152739 192.168.100.104 → 192.168.100.253 OpenVPN 114 MessageType: P_DATA_V2
+  204 14.884361535 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  205 14.884508813 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  206 14.884567261 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  207 14.892063795 192.168.100.104 → 192.168.100.253 OpenVPN 64 MessageType: P_ACK_V1
+  208 14.892140449 192.168.100.104 → 192.168.100.253 OpenVPN 114 MessageType: P_DATA_V2
+  209 15.814525156 PcsCompu_08:a7:b0 → PcsCompu_30:39:43 ARP 42 192.168.100.253 is at 08:00:27:08:a7:b0
+  210 15.814584301 PcsCompu_08:a7:b0 → PcsCompu_68:98:b2 ARP 42 192.168.100.104 is at 08:00:27:08:a7:b0 (duplicate use of 192.168.100.253 detected!)
+  211 15.829380550 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  212 15.829408409 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  213 15.830685770 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  214 15.830703634 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  215 15.836110790 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  216 15.836223766 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  217 16.830955627 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  218 16.830990366 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  219 16.832402580 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  220 16.832417528 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  221 16.836133380 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  222 16.836369433 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  223 17.832067785 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  224 17.832095407 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  225 17.833438442 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  226 17.833454443 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  227 17.836149520 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  228 17.836261654 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  229 18.771795309 192.168.100.104 → 192.168.100.253 OpenVPN 114 MessageType: P_DATA_V2
+  230 18.771825017 192.168.100.104 → 192.168.100.253 OpenVPN 114 MessageType: P_DATA_V2
+  231 18.772222780 192.168.100.104 → 192.168.100.253 OpenVPN 114 MessageType: P_DATA_V2
+  232 18.833285436 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  233 18.833317352 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  234 18.834515391 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  235 18.834537286 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  236 18.836110005 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  237 18.836370980 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  238 19.834423720 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  239 19.834452264 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  240 19.835804011 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  241 19.835820019 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  242 19.836236106 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  243 19.836530600 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  244 20.835761018 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  245 20.835787928 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  246 20.836211774 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  247 20.837233157 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  248 20.837248809 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  249 20.844168379 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  250 21.837306841 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  251 21.837333561 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  252 21.838677962 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  253 21.838693878 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  254 21.844128348 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  255 21.844244865 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  256 22.839220804 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  257 22.839249351 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  258 22.840501390 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  259 22.840522243 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  260 22.844217931 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  261 22.844330667 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  262 23.839461549 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  263 23.839491416 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  264 23.840843748 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  265 23.840860116 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  266 23.844143439 192.168.100.104 → 192.168.100.253 OpenVPN 150 MessageType: P_DATA_V2
+  267 23.844264392 192.168.100.253 → 192.168.100.104 OpenVPN 150 MessageType: P_DATA_V2
+  268 24.064011056 PcsCompu_08:a7:b0 → PcsCompu_30:39:43 ARP 42 Who has 192.168.100.104? Tell 192.168.100.102
+  269 24.064260428 PcsCompu_30:39:43 → PcsCompu_08:a7:b0 ARP 60 192.168.100.104 is at 08:00:27:30:39:43
+  270 25.824814958 PcsCompu_08:a7:b0 → PcsCompu_30:39:43 ARP 42 192.168.100.253 is at 08:00:27:08:a7:b0
+  271 25.824877163 PcsCompu_08:a7:b0 → PcsCompu_68:98:b2 ARP 42 192.168.100.104 is at 08:00:27:08:a7:b0 (duplicate use of 192.168.100.253 detected!)
+  272 26.451708491 192.168.100.104 → 192.168.100.253 OpenVPN 114 MessageType: P_DATA_V2
+  273 26.451736854 192.168.100.104 → 192.168.100.253 OpenVPN 114 MessageType: P_DATA_V2
+  274 26.452169088 192.168.100.104 → 192.168.100.253 OpenVPN 114 MessageType: P_DATA_V2

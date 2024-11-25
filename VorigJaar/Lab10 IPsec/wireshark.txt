@@ -1,0 +1,44 @@
+Op een nieuwe terminal wordt dit onderschept met wireshark:
+
+```bash
+red@machine:~$ sudo tshark -i enp0s3 icmp
+Running as user "root" and group "root". This could be dangerous.
+Capturing on 'enp0s3'
+ ** (tshark:1649) 12:03:29.209610 [Main MESSAGE] -- Capture started.
+ ** (tshark:1649) 12:03:29.209825 [Main MESSAGE] -- File: "/tmp/wireshark_enp0s30L1GS2.pcapng"
+    1 0.000000000 192.168.100.253 → 192.168.100.103 ICMP 102 Time-to-live exceeded (Time to live exceeded in transit)
+    2 0.000000092 192.168.100.253 → 192.168.100.103 ICMP 102 Time-to-live exceeded (Time to live exceeded in transit)
+    3 0.000137344 192.168.100.253 → 192.168.100.103 ICMP 102 Time-to-live exceeded (Time to live exceeded in transit)
+    4 0.000488533   172.30.0.5 → 192.168.100.103 ICMP 102 Destination unreachable (Port unreachable)
+    5 0.000817525   172.30.0.5 → 192.168.100.103 ICMP 102 Destination unreachable (Port unreachable)
+    6 0.000996997   172.30.0.5 → 192.168.100.103 ICMP 102 Destination unreachable (Port unreachable)
+    7 0.001087614   172.30.0.5 → 192.168.100.103 ICMP 102 Destination unreachable (Port unreachable)
+    8 0.001087730   172.30.0.5 → 192.168.100.103 ICMP 102 Destination unreachable (Port unreachable)
+    9 0.001412777   172.30.0.5 → 192.168.100.103 ICMP 102 Destination unreachable (Port unreachable)
+   10 0.007451672 192.168.100.253 → 192.168.100.103 ICMP 102 Time-to-live exceeded (Time to live exceeded in transit)
+   11 0.007489645 192.168.100.253 → 192.168.100.103 ICMP 102 Time-to-live exceeded (Time to live exceeded in transit)
+   12 0.007512763 192.168.100.253 → 192.168.100.103 ICMP 102 Time-to-live exceeded (Time to live exceeded in transit)
+   13 0.007603153   172.30.0.5 → 192.168.100.103 ICMP 102 Destination unreachable (Port unreachable)
+   14 0.007771629   172.30.0.5 → 192.168.100.103 ICMP 102 Destination unreachable (Port unreachable)
+   15 0.007902089   172.30.0.5 → 192.168.100.103 ICMP 102 Destination unreachable (Port unreachable)
+   16 0.007977125   172.30.0.5 → 192.168.100.103 ICMP 102 Destination unreachable (Port unreachable)
+   17 0.008044183   172.30.0.5 → 192.168.100.103 ICMP 102 Destination unreachable (Port unreachable)
+   18 0.008236113   172.30.0.5 → 192.168.100.103 ICMP 102 Destination unreachable (Port unreachable)
+   19 7.570049065 192.168.100.253 → 192.168.100.102 ICMP 102 Destination unreachable (Host unreachable)
+   20 7.570049623 192.168.100.253 → 192.168.100.102 ICMP 102 Destination unreachable (Host unreachable)
+   21 7.570049671 192.168.100.253 → 192.168.100.102 ICMP 102 Destination unreachable (Host unreachable)
+   22 8.941825883 192.168.100.103 → 172.30.0.4   ICMP 98 Echo (ping) request  id=0x000f, seq=1/256, ttl=63
+   23 8.947372558 192.168.100.103 → 172.30.0.4   ICMP 98 Echo (ping) request  id=0x000f, seq=1/256, ttl=63
+   24 8.948371008   172.30.0.4 → 192.168.100.103 ICMP 98 Echo (ping) reply    id=0x000f, seq=1/256, ttl=127 (request in 23)
+   25 8.955382374   172.30.0.4 → 192.168.100.103 ICMP 98 Echo (ping) reply    id=0x000f, seq=1/256, ttl=127
+   26 9.943444176 192.168.100.103 → 172.30.0.4   ICMP 98 Echo (ping) request  id=0x000f, seq=2/512, ttl=63
+   27 9.947381337 192.168.100.103 → 172.30.0.4   ICMP 98 Echo (ping) request  id=0x000f, seq=2/512, ttl=63
+   28 9.948257822   172.30.0.4 → 192.168.100.103 ICMP 98 Echo (ping) reply    id=0x000f, seq=2/512, ttl=127 (request in 27)
+   29 9.955395927   172.30.0.4 → 192.168.100.103 ICMP 98 Echo (ping) reply    id=0x000f, seq=2/512, ttl=127
+   30 10.944740153 192.168.100.103 → 172.30.0.4   ICMP 98 Echo (ping) request  id=0x000f, seq=3/768, ttl=63
+   31 10.947401321 192.168.100.103 → 172.30.0.4   ICMP 98 Echo (ping) request  id=0x000f, seq=3/768, ttl=63
+   32 10.948351834   172.30.0.4 → 192.168.100.103 ICMP 98 Echo (ping) reply    id=0x000f, seq=3/768, ttl=127 (request in 31)
+   33 10.955348791   172.30.0.4 → 192.168.100.103 ICMP 98 Echo (ping) reply    id=0x000f, seq=3/768, ttl=127
+^Ctshark:
+33 packets captured
+```
