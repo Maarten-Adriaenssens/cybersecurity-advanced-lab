@@ -1,0 +1,15 @@
+#!/usr/sbin/nft -f
+flush ruleset
+table ip filter {
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+        ip saddr 192.168.62.254 ip daddr 0.0.0.0/0 tcp dport 22 accept
+        ip saddr 0.0.0.0/0 ip daddr 0.0.0.0/0 icmp type echo-request accept
+        ip saddr 0.0.0.0/0 ip daddr 172.30.0.4 udp dport 53 accept
+        ip saddr 0.0.0.0/0 ip daddr 172.30.0.10 tcp dport { 80, 443 } accept
+        ip saddr 172.30.0.10 ip daddr 172.30.64.15 accept
+        ip saddr 172.30.64.15 ip daddr 172.30.0.10 accept
+        ip saddr { 172.30.0.0/16 } ip daddr 0.0.0.0/0 accept
+        ct state established,related accept
+    }
+}
