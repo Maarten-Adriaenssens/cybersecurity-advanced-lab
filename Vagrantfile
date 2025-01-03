@@ -14,7 +14,7 @@ Vagrant.configure("2") do |config|
             v.customize ["modifyvm", :id, "--groups", "/CSA"]
             v.name = "companyrouter"
             v.cpus = "1"
-            v.memory = "1024"
+            v.memory = "6334"
         end
 
         host.vm.provision "shell", inline: <<-SHELL
