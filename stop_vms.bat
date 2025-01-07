@@ -3,7 +3,7 @@ REM Path to VBoxManage.exe - update if VirtualBox is installed in a different lo
 set "VBOXMANAGE=C:\Program Files\Oracle\VirtualBox\VBoxManage.exe"
 
 REM List of VMs to save state
-set VMS=isprouter companyrouter homerouter web dns database employee remote-employee kali-linux-2024.3virtualbox-amd64
+set VMS=isprouter companyrouter homerouter web dns database employee remote-employee wazuh
 
 echo Saving VMs state...
 

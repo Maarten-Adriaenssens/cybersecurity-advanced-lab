@@ -173,4 +173,37 @@ Vagrant.configure("2") do |config|
             systemctl restart NetworkManager
         SHELL
     end
+
+    config.vm.define "wazuh" do |host|
+        host.vm.box = "almalinux/9"
+        host.vm.hostname = "wazuh"
+
+        host.vm.network "private_network", ip: "172.30.0.20", netmask: "255.255.255.0", virtualbox__intnet: "internal-company-lan"
+
+        host.vm.provider :virtualbox do |v|
+            v.customize ["modifyvm", :id, "--groups", "/CSA"]
+            v.name = "wazuh"
+            v.cpus = "2"
+            v.memory = "6334"
+        end
+
+        host.vm.provision "shell", inline: <<-SHELL
+            # Update system
+            yum update -y
+            # Install dependencies
+            yum install -y curl unzip wget
+            # Download and install Wazuh repository
+            rpm --import https://packages.wazuh.com/key/GPG-KEY-WAZUH
+            echo -e '[wazuh]\ngpgcheck=1\ngpgkey=https://packages.wazuh.com/key/GPG-KEYWAZUH\nenabled=1\nname=EL-$releasever -Wazuh\nbaseurl=https://packages.wazuh.com/4.x/yum/\nprotect=1' | tee /etc/yum.repos.d/wazuh.repo
+
+            # Install Wazuh manager
+            yum install -y wazuh-manager
+            # Start and enable Wazuh
+            systemctl enable wazuh-manager
+            systemctl start wazuh-manager
+            # Configure default gateway
+            nmcli connection modify "System eth1" ipv4.gateway 172.30.255.254
+            systemctl restart NetworkManager
+        SHELL
+    end
 end
